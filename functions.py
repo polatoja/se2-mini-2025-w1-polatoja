@@ -1,42 +1,33 @@
+import re
+
 def func(input_str):
     delimiters = {",", "\n"}
-
+    
+    # Check for custom delimiter
     if input_str.startswith("//"):
-        if input_str[2] == "[":
-            delimiter_num = input_str.count("[")
-            position = 3
-            d = 0
-            while d < delimiter_num:
-                delimiter_end = input_str.find("]")
-                if delimiter_end != -1:
-                    custom_delimiter = input_str[position:delimiter_end]
-                    delimiters.add(custom_delimiter)
-                    input_str = input_str[delimiter_end + 1:]
-                    print("Custom Delimiter:", custom_delimiter if 'custom_delimiter' in locals() else "None")
-                    print("Remaining Input:", input_str)
-                    position = 1
-                    d += 1
-        else:
-            custom_delimiter = input_str[2]
-            delimiters.add(custom_delimiter)
-            input_str = input_str[3:]
+        delimiter_section, input_str = input_str.split("\n", 1)
+        if "[" in delimiter_section:  # Multiple character delimiters
+            custom_delimiters = re.findall(r"\[(.*?)\]", delimiter_section)
+            delimiters.update(custom_delimiters)
+        else:  # Single character delimiter
+            delimiters.add(delimiter_section[2])
 
-    if "-" in input_str:
-        raise ValueError("Negative numbers are not allowed")
-
-    if input_str == "":
-        return 0
-
-    if input_str.isdigit():
-        return int(input_str) if int(input_str) <= 1000 else 0
-
+    # Replace all delimiters with ","
     for d in delimiters:
         input_str = input_str.replace(d, ",")
 
+    # Split numbers
     parts = input_str.split(",")
 
-    if all(part.strip().isdigit() for part in parts):
-        numbers = [int(num) for num in parts if int(num) <= 1000]
-        return sum(numbers)
+    # Convert to integers while filtering out empty values
+    numbers = []
+    for num in parts:
+        num = num.strip()
+        if num:  # Ignore empty values
+            if "-" in num:
+                raise ValueError("Negative numbers are not allowed")
+            num = int(num)
+            if num <= 1000:  # Ignore numbers > 1000
+                numbers.append(num)
 
-    return 1
+    return sum(numbers) if numbers else 0
